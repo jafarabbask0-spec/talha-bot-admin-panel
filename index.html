@@ -1,32 +1,35 @@
-‎<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TALHA TRADER AUTO BOT</title>
-    <style>
-        /* ------------------ DESIGN & ANIMATIONS ------------------ */
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #050505;
-            font-family: 'Segoe UI', sans-serif;
-            height: 100vh;
-            overflow: hidden;
-        }
+    <title>Talha Bhai Auto Trading - Final Secure</title>
+</head>
+<body>
+    <script id="js">
+(function() {
+    /* ------------------ 1. CONFIG & STORAGE ------------------ */
+    const storageKey = 'TALHA_ULTRA_FINAL';
+    const dbURL = `https://talha-trader-admin-panel-lock-default-rtdb.firebaseio.com/users.json`;
+    const logoURL = "https://talha-trader-admin-panelcom.vercel.app/logo.png";
+    
+    let myUID = localStorage.getItem(storageKey + '_UID') || (Math.random().toString().slice(2, 22));
+    localStorage.setItem(storageKey + '_UID', myUID);
 
-        @keyframes liquid-glow { 
-            0% { border-color: #722082; box-shadow: 0 0 10px #722082; } 
-            50% { border-color: #00ffcc; box-shadow: 0 0 25px #00ffcc; } 
-            100% { border-color: #722082; box-shadow: 0 0 10px #722082; } 
-        }
+    const old = document.getElementById('talha-final-root');
+    if (old) old.remove();
+
+    /* ------------------ 2. DYNAMIC UI & ANIMATIONS ------------------ */
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes liquid-glow { 0% { border-color: #722082; box-shadow: 0 0 10px #722082; } 50% { border-color: #00ffcc; box-shadow: 0 0 25px #00ffcc; } 100% { border-color: #722082; box-shadow: 0 0 10px #722082; } }
         @keyframes scan-rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes qr-line-anim { 0% { top: 0%; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
         
         #talha-final-root {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
-            pointer-events: none; z-index: 2147483647;
+            pointer-events: none; z-index: 2147483647; font-family: 'Segoe UI', sans-serif;
         }
         #talha-bot {
             width: 320px; background: rgba(8, 8, 8, 0.98); border: 3px solid #722082;
@@ -39,20 +42,16 @@
         .indicator-box { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; font-size: 11px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 50px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; }
         .online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
-        .locked { background: #ff3131; box-shadow: 0 0 10px #ff3131; }
+        .offline { background: #ff3131; }
 
-        .form-select, .form-input { width: 100%; background: #000; color: #fff; border: 1px solid #333; padding: 12px; border-radius: 15px; margin-bottom: 12px; outline: none; border-left: 4px solid #722082; box-sizing: border-box; }
-        .form-input { font-weight: bold; font-size: 14px; }
-        .input-label { font-size: 11px; color: #00ffcc; text-align: left; margin-bottom: 4px; padding-left: 5px; font-weight: 600; letter-spacing: 1px; }
+        .form-select { width: 100%; background: #000; color: #fff; border: 1px solid #333; padding: 14px; border-radius: 15px; margin-bottom: 12px; outline: none; border-left: 4px solid #722082; }
         
-        #sig-display { background: #000; border-radius: 20px; padding: 25px; border: 1.5px solid #222; margin-bottom: 15px; position: relative; overflow: hidden; }
+        #sig-display { background: #000; border-radius: 20px; padding: 30px; border: 1.5px solid #222; margin-bottom: 15px; position: relative; overflow: hidden; }
         #sig-main { font-size: 36px; font-weight: 900; }
         #sig-timer { font-size: 12px; color: #722082; margin-top: 10px; letter-spacing: 2px; }
 
-        .action-btn { width: 100%; padding: 15px; border-radius: 18px; border: none; font-weight: 800; cursor: pointer; transition: 0.3s; margin-top: 5px; text-transform: uppercase; }
+        .action-btn { width: 100%; padding: 15px; border-radius: 18px; border: none; font-weight: 800; cursor: pointer; transition: 0.3s; margin-top: 10px; text-transform: uppercase; }
         
-        .id-display-box { background: #111; border: 1px dashed #722082; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: bold; color: #00ffcc; margin: 15px 0; word-break: break-all; user-select: all; }
-
         #floating-bot-icon {
             position: fixed; top: 150px; right: 20px; width: 70px; height: 70px;
             background: rgba(0,0,0,0.8); border: 2px solid #722082; border-radius: 50%;
@@ -69,236 +68,167 @@
             display: none; z-index: 2147483646; pointer-events: none;
             animation: qr-line-anim 2s linear infinite;
         }
-    </style>
-</head>
-<body>
+    `;
+    document.head.appendChild(style);
 
-    <div id="qr-scan-line"></div>
-    <div id="floating-bot-icon"></div>
-    <div id="talha-final-root"></div>
+    /* ------------------ 3. HTML DOM ------------------ */
+    const root = document.createElement('div');
+    root.id = 'talha-final-root';
+    document.body.appendChild(root);
 
-    <script>
-        (function() {
-            /* ------------------ 1. CONFIG & SETTINGS ------------------ */
-            const logoURL = "https://i.ibb.co/fd9wCsn2/icon.jpg"; 
-            const backupLogoURL = "https://i.ibb.co/fd9wCsn2/icon.jpg";
-            const firebaseURL = "https://talha-trader-admin-panel-lock-default-rtdb.firebaseio.com/users.json";
-            const telegramUsername = "@TALHATRADERQUOTEX"; 
+    const qrLine = document.createElement('div');
+    qrLine.id = 'qr-scan-line';
+    document.body.appendChild(qrLine);
 
-            // DOM Elements fetch
-            const root = document.getElementById('talha-final-root');
-            const qrLine = document.getElementById('qr-scan-line');
-            const floatIcon = document.getElementById('floating-bot-icon');
+    const floatIcon = document.createElement('div');
+    floatIcon.id = 'floating-bot-icon';
+    floatIcon.innerHTML = `<img src="${logoURL}">`;
+    document.body.appendChild(floatIcon);
 
-            floatIcon.innerHTML = `<img src="${logoURL}" onerror="this.onerror=null; this.src='${backupLogoURL}';">`;
+    root.innerHTML = `
+        <div id="talha-bot">
+            <div class="header-title">TALHA BHAI AUTO TRADING</div>
+            <div class="indicator-box">
+                <div id="status-dot" class="dot offline"></div>
+                <span id="status-msg">OFFLINE BY SERVER</span>
+            </div>
 
-            // Initial Loading State
-            root.innerHTML = `
-                <div id="talha-bot">
-                    <div class="header-title">TALHA TRADER AUTO BOT</div>
-                    <div class="indicator-box">
-                        <div class="dot" style="background: #ffcc00;"></div>
-                        <span>VERIFYING SYSTEM...</span>
-                    </div>
-                    <div style="font-size:13px; color:#aaa; margin: 20px 0;">Checking authorization status, please wait...</div>
+            <div id="auth-box">
+                <div style="background:#111; padding:15px; border-radius:15px; margin-bottom:15px; border:1px dashed #444;">
+                    <span style="color:#888; font-size:10px;">YOUR UNIQUE TERMINAL ID</span><br>
+                    <b id="uid-v9" style="font-size:11px;">${myUID}</b><br>
+                    <button id="copy-v9" style="background:none; border:none; color:#00ffcc; cursor:pointer; font-size:11px; margin-top:8px;">COPY LICENSE</button>
                 </div>
-            `;
+                <button class="action-btn" style="background:#722082; color:white;" id="verify-v9">GET ACCESS</button>
+            </div>
 
-            /* ------------------ 2. 20-DIGIT ID GENERATION & STORAGE ------------------ */
-            let userId = localStorage.getItem('talha_bot_user_id');
-            if (!userId) {
-                userId = '';
-                for (let i = 0; i < 20; i++) {
-                    userId += Math.floor(Math.random() * 10).toString();
-                }
-                localStorage.setItem('talha_bot_user_id', userId);
-            }
-
-            /* ------------------ 3. TRADING AUTOMATION LOGIC ------------------ */
-            let isProcessing = false; 
-            let clickTimer = null;
-
-            function findButtonAndClick(dir) {
-                const query = dir === "UP" ? "Up" : "Down";
-                // Note: Standalone page par click karne ke liye Quotex platform ka DOM element hona zaroori hai.
-                const all = document.querySelectorAll('button, span, div, a');
-                for (let el of all) {
-                    if (el.innerText.trim() === query && el.offsetWidth > 0) {
-                        el.click(); 
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            async function startScanning() {
-                if (isProcessing) return; 
-                isProcessing = true;
+            <div id="bot-main" style="display:none;">
+                <select id="time-v9" class="form-select">
+                    <option value="5">5 SECONDS</option>
+                    <option value="15">15 SECONDS</option>
+                    <option value="30">30 SECONDS</option>
+                    <option value="60">1 MINUTE</option>
+                    <option value="120">2 MINUTES</option>
+                    <option value="300">5 MINUTES</option>
+                    <option value="600">10 MINUTES</option>
+                    <option value="900">15 MINUTES</option>
+                </select>
                 
-                qrLine.style.display = "block";
-                floatIcon.classList.add('scanning-active');
-                const mainTxt = document.getElementById('sig-main');
-                const timerTxt = document.getElementById('sig-timer');
-                const tf = parseInt(document.getElementById('time-v9').value) || 5;
-                const tradeCount = parseInt(document.getElementById('quantity-v9').value) || 1;
-
-                mainTxt.innerText = "SCANNING..."; 
-                mainTxt.style.color = "#00ffcc";
-
-                await new Promise(r => setTimeout(r, 4000));
+                <div id="sig-display">
+                    <div id="sig-main" style="color:#333;">IDLE</div>
+                    <div id="sig-timer">READY TO SCAN</div>
+                </div>
                 
-                qrLine.style.display = "none"; 
-                floatIcon.classList.remove('scanning-active'); 
+                <button class="action-btn" style="background:#1a1a1a; color:#00ffcc; border:1px solid #333;" id="hide-to-icon">SWITCH TO ICON</button>
+            </div>
+        </div>
+    `;
 
-                const side = Math.random() > 0.5 ? "UP" : "DOWN";
-                mainTxt.innerText = side === "UP" ? "UP ↑" : "DOWN ↓";
-                mainTxt.style.color = side === "UP" ? "#00ff00" : "#ff3131";
+    /* ------------------ 4. TRADING & SCAN LOGIC ------------------ */
+    let isProcessing = false; // Is scanning or trade active?
+    let clickTimer = null;
 
-                for (let i = 0; i < tradeCount; i++) {
-                    findButtonAndClick(side);
-                    if (tradeCount > 1) await new Promise(r => setTimeout(r, 150));
-                }
-
-                let remaining = tf;
-                let countdown = setInterval(() => {
-                    remaining--;
-                    timerTxt.innerText = `WAITING: ${remaining}s`;
-                    if (remaining <= 0) {
-                        clearInterval(countdown);
-                        isProcessing = false; 
-                        mainTxt.innerText = "IDLE";
-                        mainTxt.style.color = "#555";
-                        timerTxt.innerText = "READY";
-                    }
-                }, 1000);
+    function findButtonAndClick(dir) {
+        const query = dir === "UP" ? "Up" : "Down";
+        const all = document.querySelectorAll('button, span, div, a');
+        for (let el of all) {
+            if (el.innerText.trim() === query && el.offsetWidth > 0) {
+                el.click(); return true;
             }
+        }
+        return false;
+    }
 
-            /* ------------------ 4. INTERFACE RENDERERS ------------------ */
-            function renderMainBot() {
-                root.innerHTML = `
-                    <div id="talha-bot">
-                        <div class="header-title">TALHA TRADER AUTO BOT</div>
-                        <div class="indicator-box">
-                            <div class="dot online"></div>
-                            <span>SYSTEM ACTIVE</span>
-                        </div>
+    async function startScanning() {
+        // Strict Check: Agar pehle se scan ya trade chal rahi hai, to wapas click kaam na kare
+        if (isProcessing) return; 
+        isProcessing = true;
+        
+        qrLine.style.display = "block";
+        floatIcon.classList.add('scanning-active');
+        const mainTxt = document.getElementById('sig-main');
+        const timerTxt = document.getElementById('sig-timer');
+        const tf = parseInt(document.getElementById('time-v9').value);
 
-                        <div id="bot-main">
-                            <div class="input-label">TIME</div>
-                            <select id="time-v9" class="form-select">
-                                <option value="5">5 SECONDS</option>
-                                <option value="15">15 SECONDS</option>
-                                <option value="30">30 SECONDS</option>
-                                <option value="60">1 MINUTE</option>
-                                <option value="120">2 MINUTES</option>
-                                <option value="300">5 MINUTES</option>
-                            </select>
+        mainTxt.innerText = "SCANNING..."; 
+        mainTxt.style.color = "#00ffcc";
 
-                            <div class="input-label">MARKET</div>
-                            <select id="market-v9" class="form-select">
-                                <option value="USD-PKR-OTC">USD/PKR (OTC)</option>
-                                <option value="USD-MXN-OTC">USD/MXN (OTC)</option>
-                                <option value="USD-INR-OTC">USD/INR (OTC)</option>
-                                <option value="USD-IDR-OTC">USD/IDR (OTC)</option>
-                                <option value="USD-NGN-OTC">USD/NGN (OTC)</option>
-                                <option value="USD-PHP-OTC">USD/PHP (OTC)</option>
-                                <option value="USD-COP-OTC">USD/COP (OTC)</option>
-                                <option value="USD-BRL-OTC">USD/BRL (OTC)</option>
-                                <option value="USD-BDT-OTC">USD/BDT (OTC)</option>
-                                <option value="USD-ARS-OTC">USD/ARS (OTC)</option>
-                            </select>
+        // Analysis Phase
+        await new Promise(r => setTimeout(r, 4000));
+        
+        qrLine.style.display = "none"; // Scan line band
+        floatIcon.classList.remove('scanning-active'); // Logo ghoomna band jab trade lage
 
-                            <div class="input-label">NUMBER OF TRADES</div>
-                            <input type="number" id="quantity-v9" class="form-input" value="1" min="1" max="20">
-                            
-                            <div id="sig-display">
-                                <div id="sig-main" style="color:#555;">IDLE</div>
-                                <div id="sig-timer">READY TO SCAN</div>
-                            </div>
-                            
-                            <button class="action-btn" style="background:#1a1a1a; color:#00ffcc; border:1px solid #333;" id="hide-to-icon">SWITCH TO ICON</button>
-                        </div>
-                    </div>
-                `;
+        const side = Math.random() > 0.5 ? "UP" : "DOWN";
+        mainTxt.innerText = side === "UP" ? "CALL ↑" : "PUT ↓";
+        mainTxt.style.color = side === "UP" ? "#00ff00" : "#ff3131";
 
-                // Event Handlers
-                document.getElementById('hide-to-icon').onclick = () => {
-                    root.style.display = "none";
-                    floatIcon.style.display = "flex";
-                };
+        findButtonAndClick(side);
 
-                floatIcon.onclick = () => {
-                    if (clickTimer == null) {
-                        clickTimer = setTimeout(() => {
-                            clickTimer = null;
-                            startScanning(); 
-                        }, 300);
-                    } else {
-                        clearTimeout(clickTimer);
-                        clickTimer = null;
-                        floatIcon.style.display = "none";
-                        root.style.display = "flex";
-                    }
-                };
+        // Trade Countdown Phase
+        let remaining = tf;
+        let countdown = setInterval(() => {
+            remaining--;
+            timerTxt.innerText = `WAITING: ${remaining}s`;
+            if (remaining <= 0) {
+                clearInterval(countdown);
+                isProcessing = false; // AB NAYI SCAN ALLOW HAI
+                mainTxt.innerText = "IDLE";
+                timerTxt.innerText = "READY";
             }
+        }, 1000);
+    }
 
-            function renderLockScreen() {
-                root.innerHTML = `
-                    <div id="talha-bot">
-                        <div class="header-title" style="background: linear-gradient(to right, #ff3131, #ff9900); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">DEVICE LOCKED</div>
-                        <div class="indicator-box">
-                            <div class="dot locked"></div>
-                            <span>NOT AUTHORIZED</span>
-                        </div>
-                        
-                        <div style="font-size: 13px; color: #bbb; margin-bottom: 10px; line-height: 1.4;">
-                            Your 20-ID copy it and send to the administrator.
-                        </div>
-
-                        <div class="input-label" style="color: #ff3131;">YOUR UNIQUE ID:</div>
-                        <div class="id-display-box">${userId}</div>
-
-                        <button class="action-btn" style="background: linear-gradient(135deg, #722082, #00ffcc); color: #000; font-weight:900;" id="contact-admin-btn">CONTACT ON TELEGRAM</button>
-                    </div>
-                `;
-
-                document.getElementById('contact-admin-btn').onclick = () => {
-                    window.open(`https://t.me/${telegramUsername.replace('@', '')}`, '_blank');
-                };
+    /* ------------------ 5. INTERFACE ACTIONS ------------------ */
+    
+    document.getElementById('verify-v9').onclick = async function() {
+        const btn = this;
+        btn.innerText = "VERIFYING...";
+        try {
+            const res = await fetch(dbURL);
+            const data = await res.json();
+            const user = Object.values(data || {}).find(u => u.id === myUID && u.status === "active");
+            
+            if (user) {
+                document.getElementById('auth-box').style.display = "none";
+                document.getElementById('bot-main').style.display = "block";
+                document.getElementById('status-dot').className = "dot online";
+                document.getElementById('status-msg').innerText = "SYSTEM UNLOCKED";
+            } else {
+                btn.innerText = "ID INACTIVE";
+                setTimeout(() => btn.innerText = "GET ACCESS", 2000);
             }
+        } catch (e) {
+            btn.innerText = "GET ACCESS";
+        }
+    };
 
-            /* ------------------ 5. FIREBASE AUTH VERIFICATION ------------------ */
-            async function checkAuthorization() {
-                try {
-                    const response = await fetch(firebaseURL);
-                    if (!response.ok) throw new Error("Database error");
-                    const data = await response.json();
-                    
-                    let isAuthorized = false;
+    floatIcon.onclick = () => {
+        if (clickTimer == null) {
+            clickTimer = setTimeout(() => {
+                clickTimer = null;
+                startScanning(); 
+            }, 300);
+        } else {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+            // Double Tap: Switch to Menu
+            floatIcon.style.display = "none";
+            root.style.display = "flex";
+        }
+    };
 
-                    if (data) {
-                        if (typeof data === 'object') {
-                            if (data[userId] !== undefined || Object.values(data).includes(userId) || Object.values(data).some(u => u && (u.id === userId || u.userId === userId))) {
-                                isAuthorized = true;
-                            }
-                        }
-                    }
+    document.getElementById('hide-to-icon').onclick = () => {
+        root.style.display = "none";
+        floatIcon.style.display = "flex";
+    };
 
-                    if (isAuthorized) {
-                        renderMainBot();
-                    } else {
-                        renderLockScreen();
-                    }
-                } catch (error) {
-                    console.error("Auth verification failed: ", error);
-                    renderLockScreen();
-                }
-            }
+    document.getElementById('copy-v9').onclick = function() {
+        navigator.clipboard.writeText(myUID);
+        this.innerText = "COPIED"; setTimeout(() => this.innerText = "COPY LICENSE", 2000);
+    };
 
-            // Run verification loop
-            checkAuthorization();
-
-        })();
-    </script>
+})();
+</script>
 </body>
 </html>
