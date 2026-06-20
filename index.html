@@ -44,7 +44,8 @@
         .online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
         .offline { background: #ff3131; }
 
-        .form-select { width: 100%; background: #000; color: #fff; border: 1px solid #333; padding: 14px; border-radius: 15px; margin-bottom: 12px; outline: none; border-left: 4px solid #722082; }
+        .form-select, .form-input { width: 100%; background: #000; color: #fff; border: 1px solid #333; padding: 14px; border-radius: 15px; margin-bottom: 12px; outline: none; border-left: 4px solid #722082; box-sizing: border-box; }
+        .form-input::placeholder { color: #555; }
         
         #sig-display { background: #000; border-radius: 20px; padding: 30px; border: 1.5px solid #222; margin-bottom: 15px; position: relative; overflow: hidden; }
         #sig-main { font-size: 36px; font-weight: 900; }
@@ -113,6 +114,8 @@
                     <option value="600">10 MINUTES</option>
                     <option value="900">15 MINUTES</option>
                 </select>
+
+                <input type="number" id="trade-count-v9" class="form-input" min="1" value="1" placeholder="NUMBER OF TRADES">
                 
                 <div id="sig-display">
                     <div id="sig-main" style="color:#333;">IDLE</div>
@@ -125,22 +128,23 @@
     `;
 
     /* ------------------ 4. TRADING & SCAN LOGIC ------------------ */
-    let isProcessing = false; // Is scanning or trade active?
+    let isProcessing = false; 
     let clickTimer = null;
 
     function findButtonAndClick(dir) {
         const query = dir === "UP" ? "Up" : "Down";
         const all = document.querySelectorAll('button, span, div, a');
+        let clicked = false;
         for (let el of all) {
             if (el.innerText.trim() === query && el.offsetWidth > 0) {
-                el.click(); return true;
+                el.click(); 
+                clicked = true;
             }
         }
-        return false;
+        return clicked;
     }
 
     async function startScanning() {
-        // Strict Check: Agar pehle se scan ya trade chal rahi hai, to wapas click kaam na kare
         if (isProcessing) return; 
         isProcessing = true;
         
@@ -149,6 +153,10 @@
         const mainTxt = document.getElementById('sig-main');
         const timerTxt = document.getElementById('sig-timer');
         const tf = parseInt(document.getElementById('time-v9').value);
+        
+        // Input se number of trades read karein
+        let tradeCount = parseInt(document.getElementById('trade-count-v9').value) || 1;
+        if (tradeCount < 1) tradeCount = 1;
 
         mainTxt.innerText = "SCANNING..."; 
         mainTxt.style.color = "#00ffcc";
@@ -156,14 +164,20 @@
         // Analysis Phase
         await new Promise(r => setTimeout(r, 4000));
         
-        qrLine.style.display = "none"; // Scan line band
-        floatIcon.classList.remove('scanning-active'); // Logo ghoomna band jab trade lage
+        qrLine.style.display = "none"; 
+        floatIcon.classList.remove('scanning-active'); 
 
         const side = Math.random() > 0.5 ? "UP" : "DOWN";
         mainTxt.innerText = side === "UP" ? "CALL ↑" : "PUT ↓";
         mainTxt.style.color = side === "UP" ? "#00ff00" : "#ff3131";
 
-        findButtonAndClick(side);
+        // LOOP: Jitne numbers dale hain utni baar automatic click hoga (50ms gap ke sath)
+        for (let i = 0; i < tradeCount; i++) {
+            findButtonAndClick(side);
+            if (tradeCount > 1) {
+                await new Promise(r => setTimeout(r, 50)); 
+            }
+        }
 
         // Trade Countdown Phase
         let remaining = tf;
@@ -172,7 +186,7 @@
             timerTxt.innerText = `WAITING: ${remaining}s`;
             if (remaining <= 0) {
                 clearInterval(countdown);
-                isProcessing = false; // AB NAYI SCAN ALLOW HAI
+                isProcessing = false; 
                 mainTxt.innerText = "IDLE";
                 timerTxt.innerText = "READY";
             }
@@ -212,7 +226,6 @@
         } else {
             clearTimeout(clickTimer);
             clickTimer = null;
-            // Double Tap: Switch to Menu
             floatIcon.style.display = "none";
             root.style.display = "flex";
         }
