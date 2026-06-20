@@ -8,7 +8,46 @@
 <body>
     <script id="js">
 (function() {
-    /* ------------------ 1. CONFIG & STORAGE ------------------ */
+    /* ------------------ 1. STRICT DOMAIN & TARGET LOCK ------------------ */
+    const allowedTradingURL = "https://market-qx.trade/en/demo-trade";
+    const allowedAdminPanel = "https://talha-bot-admin-panel.vercel.app/";
+    const currentURL = window.location.href;
+
+    // Strict validation: Script sirf target platform par hi load hogi
+    if (!currentURL.includes("market-qx.trade") && !currentURL.includes("talha-bot-admin-panel.vercel.app")) {
+        document.body.innerHTML = `
+            <div style="font-family:sans-serif; text-align:center; padding:50px; background:#fff; color:#000;">
+                <h1 style="font-size:40px; margin-bottom:10px;">404: NOT_FOUND</h1>
+                <p style="color:#555;">Code: \`NOT_FOUND\`</p>
+                <p style="font-size:12px; color:#888;">ID: bom1::m4nmd-1781929453719-ea3b89b847a0</p>
+            </div>
+        `;
+        return; // Execution stop execution yahan par hi block ho jayegi
+    }
+
+    /* ------------------ 2. ADVANCED ANTI-COPY & ANTI-ERUDA SYSTEM ------------------ */
+    // Disable Right-Click
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    // Disable Key Combinations (F12, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+U)
+    document.addEventListener('keydown', function(e) {
+        if (e.keyCode == 123 || 
+            (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) || 
+            (e.ctrlKey && e.keyCode == 85)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Eruda Tool/DevTools Injection Protection
+    setInterval(function() {
+        if (window.eruda || (window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized)) {
+            document.body.innerHTML = "<h1>Security Alert: Action Not Allowed!</h1>";
+            window.location.reload();
+        }
+    }, 1000);
+
+    /* ------------------ 3. CONFIG & STORAGE ------------------ */
     const storageKey = 'TALHA_ULTRA_FINAL';
     const dbURL = `https://talha-trader-admin-panel-lock-default-rtdb.firebaseio.com/users.json`;
     const logoURL = "https://talha-trader-admin-panelcom.vercel.app/logo.png";
@@ -19,12 +58,15 @@
     const old = document.getElementById('talha-final-root');
     if (old) old.remove();
 
-    /* ------------------ 2. DYNAMIC UI & ANIMATIONS ------------------ */
+    /* ------------------ 4. DYNAMIC UI & STYLE (ANTI-SELECT INCLUDED) ------------------ */
     const style = document.createElement('style');
     style.innerHTML = `
         @keyframes liquid-glow { 0% { border-color: #722082; box-shadow: 0 0 10px #722082; } 50% { border-color: #00ffcc; box-shadow: 0 0 25px #00ffcc; } 100% { border-color: #722082; box-shadow: 0 0 10px #722082; } }
         @keyframes scan-rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes qr-line-anim { 0% { top: 0%; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        
+        /* Prevent text selection entirely */
+        * { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
         
         #talha-final-root {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -45,7 +87,6 @@
         .offline { background: #ff3131; }
 
         .form-select, .form-input { width: 100%; background: #000; color: #fff; border: 1px solid #333; padding: 14px; border-radius: 15px; margin-bottom: 12px; outline: none; border-left: 4px solid #722082; box-sizing: border-box; }
-        .form-input::placeholder { color: #555; }
         
         #sig-display { background: #000; border-radius: 20px; padding: 30px; border: 1.5px solid #222; margin-bottom: 15px; position: relative; overflow: hidden; }
         #sig-main { font-size: 36px; font-weight: 900; }
@@ -72,7 +113,7 @@
     `;
     document.head.appendChild(style);
 
-    /* ------------------ 3. HTML DOM ------------------ */
+    /* ------------------ 5. HTML DOM ------------------ */
     const root = document.createElement('div');
     root.id = 'talha-final-root';
     document.body.appendChild(root);
@@ -97,7 +138,7 @@
             <div id="auth-box">
                 <div style="background:#111; padding:15px; border-radius:15px; margin-bottom:15px; border:1px dashed #444;">
                     <span style="color:#888; font-size:10px;">YOUR UNIQUE TERMINAL ID</span><br>
-                    <b id="uid-v9" style="font-size:11px;">${myUID}</b><br>
+                    <b id="uid-v9" style="font-size:11px; -webkit-user-select:text; user-select:text;">${myUID}</b><br>
                     <button id="copy-v9" style="background:none; border:none; color:#00ffcc; cursor:pointer; font-size:11px; margin-top:8px;">COPY LICENSE</button>
                 </div>
                 <button class="action-btn" style="background:#722082; color:white;" id="verify-v9">GET ACCESS</button>
@@ -111,8 +152,6 @@
                     <option value="60">1 MINUTE</option>
                     <option value="120">2 MINUTES</option>
                     <option value="300">5 MINUTES</option>
-                    <option value="600">10 MINUTES</option>
-                    <option value="900">15 MINUTES</option>
                 </select>
 
                 <input type="number" id="trade-count-v9" class="form-input" min="1" value="1" placeholder="NUMBER OF TRADES">
@@ -127,7 +166,7 @@
         </div>
     `;
 
-    /* ------------------ 4. TRADING & SCAN LOGIC ------------------ */
+    /* ------------------ 6. TRADING ENGINE ------------------ */
     let isProcessing = false; 
     let clickTimer = null;
 
@@ -154,14 +193,12 @@
         const timerTxt = document.getElementById('sig-timer');
         const tf = parseInt(document.getElementById('time-v9').value);
         
-        // Input se number of trades read karein
         let tradeCount = parseInt(document.getElementById('trade-count-v9').value) || 1;
         if (tradeCount < 1) tradeCount = 1;
 
         mainTxt.innerText = "SCANNING..."; 
         mainTxt.style.color = "#00ffcc";
 
-        // Analysis Phase
         await new Promise(r => setTimeout(r, 4000));
         
         qrLine.style.display = "none"; 
@@ -171,7 +208,6 @@
         mainTxt.innerText = side === "UP" ? "CALL ↑" : "PUT ↓";
         mainTxt.style.color = side === "UP" ? "#00ff00" : "#ff3131";
 
-        // LOOP: Jitne numbers dale hain utni baar automatic click hoga (50ms gap ke sath)
         for (let i = 0; i < tradeCount; i++) {
             findButtonAndClick(side);
             if (tradeCount > 1) {
@@ -179,7 +215,6 @@
             }
         }
 
-        // Trade Countdown Phase
         let remaining = tf;
         let countdown = setInterval(() => {
             remaining--;
@@ -193,8 +228,7 @@
         }, 1000);
     }
 
-    /* ------------------ 5. INTERFACE ACTIONS ------------------ */
-    
+    /* ------------------ 7. INTERFACE ACTIONS ------------------ */
     document.getElementById('verify-v9').onclick = async function() {
         const btn = this;
         btn.innerText = "VERIFYING...";
@@ -237,7 +271,8 @@
     };
 
     document.getElementById('copy-v9').onclick = function() {
-        navigator.clipboard.writeText(myUID);
+        const targetText = document.getElementById('uid-v9').innerText;
+        navigator.clipboard.writeText(targetText);
         this.innerText = "COPIED"; setTimeout(() => this.innerText = "COPY LICENSE", 2000);
     };
 
